@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.server.ServerWebExchange;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 /**
@@ -19,8 +20,9 @@ import java.util.function.Predicate;
 @Slf4j
 public class GatewayConfig {
 
-    @Bean
-    public RouteLocator customRouteLocator(RouteLocatorBuilder routeLocatorBuilder) {
+
+   @Bean
+    public RouteLocator bdRouteLocator(RouteLocatorBuilder routeLocatorBuilder) {
         RouteLocatorBuilder.Builder routes = routeLocatorBuilder.routes();
         routes.route("translate",
                 r -> r.path("/translate")
@@ -31,23 +33,18 @@ public class GatewayConfig {
     }
 
 
+
     @Bean
-    public RouteLocator predicatesRouteLocator(RouteLocatorBuilder routeLocatorBuilder) {
-        RouteLocatorBuilder.Builder routes = routeLocatorBuilder.routes();
-        routes.route("product-service-predicates",
+    public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
+
+        return builder.routes().route("product-service-predicates",
                 r -> r.path("/product/**")
-                        .uri("lb://product-service").predicate(new Predicate<ServerWebExchange>() {
-                            @Override
-                            public boolean test(ServerWebExchange serverWebExchange) {
-                                Map map = serverWebExchange.getAttributes();
-                                log.warn(map.toString());
-                                return true;
-                            }
-                        })
+                        .uri("lb://product-service")
+        ).route("order-service-predicates",
+                r -> r.path("/order/**")
+                        .uri("lb://order-service")
         ).build();
 
-        log.warn("product-service-predicates added!!!" + routes.toString());
-        return routes.build();
     }
 
 
